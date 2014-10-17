@@ -1,21 +1,27 @@
-# Notes on C# from Pro C# Book
+Notes on C# from Pro C# Book
+============================
 
-## Functions
+Functions
+---------
 
-### Named parameters
+Named parameters
+................
 
     public int Add(int first, int second) { ... }
     Add(second: 10, first: 20);
 
-## Classes
+Classes
+-------
 
-### Chaining constructors
+Chaining constructors
+.....................
 
     public MyClass() : this(10) {}
     public MyClass(int i) : this(10, 20) {}
     public MyClass(int i, int j) { ... }
 
-### Static constructor
+Static constructor
+..................
 
 Used to initialize `static` fields.
 There can only be one and cannot take any parameters.
