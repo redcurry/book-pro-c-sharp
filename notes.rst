@@ -122,4 +122,12 @@ For the hash code, could use `GetHashCode()` on an important field
 
 (Skipped Chapter 7. Exceptions)
 
+WPF
+---
 
+* Attribute ``[STAThread]`` in ``Main()`` ensures legacy COM objects
+  are thread safe; it is necessary.
+
+* Creating a new Window object automatically adds it to Application.Windows.
+
+* The Content property of a Window should be a layout manager
