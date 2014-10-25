@@ -122,6 +122,78 @@ For the hash code, could use `GetHashCode()` on an important field
 
 (Skipped Chapter 7. Exceptions)
 
+Interfaces
+----------
+
+* Interface names should start with an "I".
+
+* Interfaces contain *only* abstract member definitions
+  (methods, properties, events, and an indexer).
+
+* Structures can implement interfaces.
+
+* Can use "is" to test whether an object implements an interface.
+
+* Explicit interface implementation of methods requires that such methods
+  be called on a reference of the interface type, not on the object type.
+
+  * General pattern: returnType InterfaceName.MethodName(params) { }
+  * Note that there is no access modifier---method is implicitly private
+
+IEnumerable
+...........
+
+* Implement IEnumerable if you want a class to be used in a foreach statement.
+
+  * Simplify the implementation by returning GetEnumerator() from the
+    underlying collection object (such as an array).
+
+* IEnumerable exposes GetEnumerator(), which returns an IEnumerator.
+
+* IEnumerator exposes MoveNext(), Current, and Reset().
+
+* GetEnumerator() may also be implemented with yield statements,
+  each one returning the next item to be accessed in a foreach statement.
+
+* Also, any method can use yield statements; such a method must return
+  an IEnumerable interface and can therefore be used in a foreach statement.
+
+ICloneable
+..........
+
+* Implement the Clone() method in the ICloneable interface to be able to
+  copy an object in a specific way (such as a deep copy).
+
+  * Member-by-member copy (typical when class contains only value types)
+    can be simplified by using the method MemberwiseClone() in object.
+
+IComparable and IComparer
+.........................
+
+* Implement CompareTo() in the IComparable interface to allow
+  a class to be sorted (for example, using Array.Sort()).
+
+  * If it makes sense, can use the CompareTo() method of an internal object
+    to simplify the implementation.
+
+* To implement additional ways to compare two objects, create a new "helper"
+  class that implements IComparer (exposes the method Compare()).
+
+  * Can specify comparer object in Array.Sort().
+  * Can provide an IComparer as a static property for ease-of-use.
+
+
+Collections and Generics
+------------------------
+
+* Prefer the generic versions of the collection classes.
+
+* Problems with non-generic collections:
+
+  * Boxing/unboxing of value types is costly
+  * No type safety (must cast  from object type)
+  * Tedious to create specialized collections
+
 WPF
 ---
 
