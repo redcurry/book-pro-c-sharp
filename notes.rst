@@ -128,7 +128,7 @@ Interfaces
 * Interface names should start with an "I".
 
 * Interfaces contain *only* abstract member definitions
-  (methods, properties, events, and an indexer).
+  (methods, operators, properties, events, and an indexer).
 
 * Structures can implement interfaces.
 
@@ -193,6 +193,36 @@ Collections and Generics
   * Boxing/unboxing of value types is costly
   * No type safety (must cast  from object type)
   * Tedious to create specialized collections
+
+* Some nongeneric classes have generic methods, such as ``Array``
+  (e.g., ``Sort<T>()``).
+
+* There are generic versions if IComparable, IEnumerable, etc.
+
+* Collections and generic collections can use *collection initialization*
+  syntax if the collections support an ``Add()`` method
+  (in ``IList`` and ``ICollection<T>``).
+
+* Use ``ObservableCollection<T>`` to handle the event when the collection
+  changes (add, remove, reset, etc.).
+
+* ``default(T)`` returns the default values for type T
+
+   * For numeric values, this is 0.
+   * For reference types, this is null.
+   * For structures, it sets all fields to their default values.
+
+* ``where`` keyword constraints the type T.
+
+  * ``public class MyGenericClass<T> where T : class, IDrawable, new()``
+    means that type ``T`` must be a reference type,
+    must implement ``IDrawable``, and must have a default constructor
+    (the ``new()`` constraint must always be listed last).
+  * ``static void Swap<T>(ref T a, ref T b) where T : struct``
+    means that ``T`` must be a structure (or ``System.ValueType``).
+
+* Cannot perform operations (+, -, *, /, etc.) on ``T``
+  (unless ``T`` implements an interface that defines such operations).
 
 WPF
 ---
