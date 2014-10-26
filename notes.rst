@@ -224,6 +224,64 @@ Collections and Generics
 * Cannot perform operations (+, -, *, /, etc.) on ``T``
   (unless ``T`` implements an interface that defines such operations).
 
+Delegates, Events, and Lambda Expressions
+-----------------------------------------
+
+Delegates
+.........
+
+* A delegate is a class that points to a method (or list of methods),
+  which can be ``static`` or belong to a specific object.
+
+* A delegate maintains the following: the address of the method it points to,
+  the parameters of the method, and the return type of the method.
+
+* Delegates can call the methods it points to asynchronously
+  (on a separate thread), without having to manually create thread objects.
+
+* The following delegate can point to any method that takes two integers
+  and returns an integer: ``public delegate int BinaryOp(int x, int y);``
+
+* The C# compiler automatically creates a sealed class deriving from
+  ``System.MulticastDelegate`` (which itself derives from ``System.Delegate``),
+  which contains the infrastructure for holding on to a list of methods.
+
+* Create a delegate object by sending it the method in its constructor:
+  ``BinaryOp b = new BinaryOp(SimpleMath.Add);``
+
+* Invoke the method by calling the delegate: ``b(10, 10)``
+  or ``b.Invoke(10, 10)``.
+
+* A list of methods a delegate points to can be obtained
+  with the ``GetInvocationList()`` method of the delegate.
+
+* Set the method pointer to a delegate by assigning it the method itself.
+
+* Add a method pointer to a delegate using the += operator
+  and specifying the name of the method directly
+  (i.e., there is no need to create a new delegate object).
+
+* Delegates can be generic, e.g.,
+  ``public delegate void MyGenericDelegate<T>(T arg);``
+
+* Can use canned delegates rather than create custom ones:
+  ``Action<>`` for void-returning methods and ``Func<>``
+  for methods that return something (specify return type as the last
+  type parameter).
+
+Events
+......
+
+* Events simplify callback functionality by automatically
+  allowing callers to register or unregister methods.
+
+* Define the delegate signature, then provide an event:
+
+      public delegate void CarEngineHandler(string msg);
+      public event CarEngineHandler Exploded;
+      public event CarEngineHandler AboutToBlow;
+
+
 WPF
 ---
 
