@@ -221,7 +221,7 @@ Collections and Generics
   * ``static void Swap<T>(ref T a, ref T b) where T : struct``
     means that ``T`` must be a structure (or ``System.ValueType``).
 
-* Cannot perform operations (+, -, *, /, etc.) on ``T``
+* Cannot perform operations (+, -, \*, /, etc.) on ``T``
   (unless ``T`` implements an interface that defines such operations).
 
 Delegates, Events, and Lambda Expressions
@@ -273,14 +273,74 @@ Events
 ......
 
 * Events simplify callback functionality by automatically
-  allowing callers to register or unregister methods.
+  allowing callers to register or unregister methods
+  using operators += and -=.
 
-* Define the delegate signature, then provide an event:
+* Define the delegate signature, then provide an event::
 
       public delegate void CarEngineHandler(string msg);
       public event CarEngineHandler Exploded;
       public event CarEngineHandler AboutToBlow;
 
+* Register a method to an event::
+
+      car.AboutToBlow += CarAboutToBlow;    // CarAboutToBlow is a method
+
+* Many events use delegates whose first parameter is the object
+  initiating the event and the second parameter a subclass of ``EventArgs``::
+
+      public delegate void CarEngineHandler(object sender, CarEventArgs e);
+
+* There is an ``EventHandler<T>`` delegate whose first parameter
+  is already an object and second parameter is the custom ``EventArgs`` type,
+  so there is no need to define a delegate::
+
+      public event EventHandler<CarEventArgs> Exploded;
+
+* Can directly register a block of code to an event ("annonymous method")::
+
+      // Parameters are optional
+      car.AboutToBlow += delegate(object sender, CarEventArgs e)
+      {
+          // Do something
+          // Can access variables of the outer method and class
+      };
+
+Lambda expressions
+..................
+
+* Lambda expression is a simplified syntax for annonymous methods.
+
+* Instead of saying::
+
+      List<int> evenNumbers = list.FindAll(delegate(int i)
+      {
+          return (i % 2) == 0;
+      }
+
+  One can say::
+
+      List<int> evenNumbers = list.FindAll(i => (i % 2) == 0);
+
+* The compiler can figure out the type of the parameter based on the delegate,
+  but it can also be specified, like ``(int i) => (i % 2) == 0``.
+
+* Can contain multiple lines::
+
+      List<int> evenNumbers = list.FindAll(i =>
+      {
+          bool isEven = ((i % 2) == 0);
+          return isEven;
+      }
+
+* Can have zero or multiple parameters::
+
+      m.SetMathHandler((msg, result) => { // Do something });
+      m.SetSimpleHandler(() => { // Do something });
+
+* Can use lambda expression to register to an event::
+
+      car.AboutToBlow += (sender, e) => Console.WriteLine(e.msg);
 
 WPF
 ---
