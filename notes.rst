@@ -224,11 +224,8 @@ Collections and Generics
 * Cannot perform operations (+, -, \*, /, etc.) on ``T``
   (unless ``T`` implements an interface that defines such operations).
 
-Delegates, Events, and Lambda Expressions
------------------------------------------
-
 Delegates
-.........
+---------
 
 * A delegate is a class that points to a method (or list of methods),
   which can be ``static`` or belong to a specific object.
@@ -270,7 +267,7 @@ Delegates
   type parameter).
 
 Events
-......
+------
 
 * Events simplify callback functionality by automatically
   allowing callers to register or unregister methods
@@ -307,7 +304,7 @@ Events
       };
 
 Lambda expressions
-..................
+------------------
 
 * Lambda expression is a simplified syntax for annonymous methods.
 
