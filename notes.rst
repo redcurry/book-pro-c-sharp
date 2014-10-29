@@ -339,6 +339,130 @@ Lambda expressions
 
       car.AboutToBlow += (sender, e) => Console.WriteLine(e.msg);
 
+Indexer
+-------
+
+* Define similarly to a property::
+
+      public Person this[int index]
+      {
+          get { return (Person)_people[index]; }
+          set { _people.Insert(index, value); }
+      }
+
+* The index could be of any type.
+
+* Indexers may be overloaded (as in ``DataTableCollection`` in ADO.NET::
+
+      public DataTable this[string name] { get; }
+      public DataTable this[string name, string tableNamespace] { get; }
+      public DataTable this[int index] { get; }
+
+* Indexers can be multidimensional (as in the example above).
+
+Operator overloading
+--------------------
+
+* Operators can only be defined with the ``static`` keyword::
+
+      public class Point
+      {
+          ...
+          public static Point operator + (Point p1, Point p2)
+          {
+              return new Point(p1.X + p2.X, p1.Y + p2.Y);
+          }
+      }
+
+* Parameters don't have to be of the same type::
+
+      public static Point operator + (Point p, int change)
+      {
+          return new Point(p.X + change, p.Y + change);
+      }
+
+      // Also define the same operator with parameters in reverse order
+
+* The += and -= operators (and others) are automatically created
+  when you define the related binary operator.
+
+* When overloading ++ and --, pre- and post- is automatically handled.
+
+* Some related operators must be overloaded together, like == and !=.
+
+Custom type conversion
+----------------------
+
+* Define an explicit conversion (i.e., when using the () operator)
+  within a class definition (in this example, ``Square``)::
+
+      public static explicit operator Square(Rectangle r)
+      {
+          return new Square(r.Height);
+      }
+
+* Can overload with other types::
+
+      public static explicit operator Square(int length)
+      {
+          return new Square(length);
+      }
+
+      public static explicit operator int (Square s)
+      {
+          return s.Length;
+      }
+
+* Define an implicit conversion::
+
+      public static implicit operator Rectangle(Square s)
+      {
+          return new Rectangle(s.Length, s.Length * 2);
+      }
+
+      // Implicit conversion can be used as follows
+      Square s = new Square(10);
+      Rectangle r = s;
+
+* Cannot define both explicit and implicit conversion operators,
+  unless they differ in signature. Defining an implicit conversion operator
+  automatically allows user to use an explicit operator.
+
+Extension methods
+-----------------
+
+* To extend a type ``Type``, define a ``static`` method in a ``static`` class::
+
+      static class MyExtensions
+      {
+          public static void ExtensionMethodName(this Type t) { ... }
+      }
+
+* The first parameter must always be qualified by ``this``,
+  but additional parameters must not.
+
+* Can also extend interfaces.
+
+Anonymous types
+---------------
+
+* Create a simple type with automatic (but read-only) properties,
+  value-based equality, and ToString() that returns memberwise values::
+
+      var car = new { Make = "BMW", Color = "Black", Speed = 90 };
+      Console.WriteLine("You have a {0} {1} going {2} mph",
+          car.Color, car.Make, car.Speed);
+
+* The ``GetHashCode()`` implementation uses each annonymous type's members
+  to compute a hash value, and the ``Equals()`` implementation also
+  uses each annonymous type's members to determine equality. But the ==
+  operator tests the reference values, not the type members.
+
+* Separately defined anonymous types with the same member names
+  within the same assembly are of the same type.
+
+* An anonymous type can contain another anonymous type.
+
 WPF
 ---
 
