@@ -463,6 +463,61 @@ Anonymous types
 
 * An anonymous type can contain another anonymous type.
 
+Pointers
+--------
+
+* If using pointers, must compile with "unsafe" option in the compiler.
+
+* Any piece of code that uses pointers, must be used within a special block
+  specified by the ``unsafe`` keyword.
+
+* For structures, classes, and members that use pointers,
+  must declare as unsafe::
+
+      public struct Node
+      {
+          public int Value;
+
+          // Struct is safe, but access to these members
+          // must occur within an unsafe block
+          public unsafe Node* Left;
+          public unsafe Node* Right;
+      }
+
+* Methods that use pointers must be marked as ``unsafe``::
+
+      unsafe static void SquareIntPointer(int* i)
+      {
+          *i *= *i;
+      }
+
+      // Call within unsafe block
+      unsafe
+      {
+          int i = 5;
+          SquareIntPointer(&i)
+      }
+
+* Can use ``->`` to access members of a pointer structure.
+
+* Can allocate memory from the call stack::
+
+      char* p = stackalloc char[256];
+
+  Its memory will be deallocated when the method ends.
+
+* Can point to a reference type, but must used the ``fixed`` keyword
+  to make sure the garbage collector doesn't take it away::
+
+      PointRef pt = new PointRef();    // Regular class with public members
+      fixed (int* p = &pt.x)
+      {
+          // Use p variable
+      }
+
+* The keyword ``sizeof`` can be used to get the size of value types
+  (e.g., ``int``, ``short``, and structures).
+
 WPF
 ---
 
