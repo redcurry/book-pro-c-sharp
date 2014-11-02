@@ -518,6 +518,57 @@ Pointers
 * The keyword ``sizeof`` can be used to get the size of value types
   (e.g., ``int``, ``short``, and structures).
 
+LINQ (Language Integrated Query)
+--------------------------------
+
+* Example: Get items that contain a blank space, and list them
+  in alphabetical order::
+
+      IEnumerable<string> subset = from g in currentVideoGames
+                                   where g.Contains(" ") orderby g select g;
+
+* In most cases, the return type of a LINQ query is a type implementing
+  the ``IEnumerable<T>`` interface, but you can use the ``var`` keyword
+  instead::
+
+      var subset = from i in numbers where i < 10 select i;
+
+* LINQ expressions, even if stored in a variable, are not evaluated
+  until they are iterated. Therefore, you can iterate over the same
+  variable a second time, and it will execute the LINQ expression again.
+
+* To execute a LINQ expression and store it somewhere, you can use
+  ``ToArray<>()``, ``ToList<>()``, or ``ToDictionary<,>()``.
+
+* When returning a LINQ query, can return as ``IEnumerable<T>``
+  or an array of the type, through the use of ``ToArray()``.
+
+* Can use LINQ on non-generic collections by using ``OfType<>()``,
+  which will return an enumeration of objects of the specified type::
+
+      ArrayList myCars = new ArrayList() { ... };
+      var myCarsEnum = myCars.OfType<Car>();
+      var fastCars = from c in myCarsEnum where c.Speed > 55 select c;
+
+* Can use anonymous types to get multiple things from a query::
+
+      var nameDesc = from p in products select new { p.Name, p.Description };
+      foreach (var item in nameDesc)
+          // Can use item.Name and item.Description
+
+  But such a query cannot be returned from a method because
+  the type of each anonymous method is generated at compile-time.
+
+* There are various LINQ operations: ``Count()``, ``Reverse()``,
+  ``Except()`` (difference between containers),
+  ``Intersect()`` (common items from containers),
+  ``Union()`` (all items from containers, no duplicates),
+  ``Concat()`` (concatenation of all items from containers),
+  ``Distinct()`` (unique items from a container).
+
+* Aggregation operations: ``Count()``, ``Max()``, ``Min()``, ``Average()``,
+  and ``Sum()``.
+
 WPF
 ---
 
