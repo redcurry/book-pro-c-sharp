@@ -568,13 +568,3 @@ LINQ (Language Integrated Query)
 
 * Aggregation operations: ``Count()``, ``Max()``, ``Min()``, ``Average()``,
   and ``Sum()``.
-
-WPF
----
-
-* Attribute ``[STAThread]`` in ``Main()`` ensures legacy COM objects
-  are thread safe; it is necessary.
-
-* Creating a new Window object automatically adds it to Application.Windows.
-
-* The Content property of a Window should be a layout manager
