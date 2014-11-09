@@ -568,3 +568,20 @@ LINQ (Language Integrated Query)
 
 * Aggregation operations: ``Count()``, ``Max()``, ``Min()``, ``Average()``,
   and ``Sum()``.
+
+Object lifetime
+---------------
+
+* Garbage collector removes an object from the heap only if it is
+  unreachable by any port of the code (incomplete explanation).
+
+* If managed heap does not have more memory to allocate an object,
+  a garbage collection will occur.
+
+* During garbage collection, the CLR builds an object graph
+  of dependencies, frees unreachable objects, the heap is compacted,
+  and references are adjusted to the new heap configuration.
+
+* The CLR uses "generations" to determine which unreachable objects
+  need to be removed; result is that newer objects (like local variables)
+  are removed more quickly than older objects.
