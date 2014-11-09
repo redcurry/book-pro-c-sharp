@@ -585,3 +585,83 @@ Object lifetime
 * The CLR uses "generations" to determine which unreachable objects
   need to be removed; result is that newer objects (like local variables)
   are removed more quickly than older objects.
+
+(Skipping the rest of the chapter, for now. p. 482.)
+
+Class libraries
+---------------
+
+* Can use aliases to both classes and namespaces::
+
+      using bf = System.Runtime.Serialization.Formatters.Binary.BinaryFormatter;
+      using bfNamespace = System.Runtime.Serialization.Formatters.Binary;
+
+* Can nest namespaces by defining a namespace within another,
+  or simply using the dot notation.
+
+* An assembly is a versioned, self-describing binary file hosted by the CLR
+  (as a .dll or .exe file).
+
+* Applications can make use of class libraries stored as .dll's,
+  but also as .exe's (though the latter is not very common),
+
+* Private assemblies reside in the same directory (or subdirectory)
+  as the client application that uses them. Shared assemblies are libraries
+  intended to be consumed by numerous applications on a single machine
+  and are deployed to the global assembly cache (GAC).
+
+* When you reference a private assembly using Visual Studio,
+  it will be copied to the output directory of the client application.
+
+* Assemblies can be used by applications written in other .NET languages,
+  including the use of properties and inheritance.
+
+* When searching for a private assembly, the CLR will search for it
+  in the application's directory, but not in subdirectories,
+  unless specified in the application's configuration file.
+
+* Visual Studio will automatically copy App.config to the proper
+  assembly's name .config file. Add App.config to the project
+  by choosing "Application Configuration File" when adding a New Item.
+
+* For .NET 3.5 and earlier, the GAC is located in C:\Windows\assembly.
+  For .NET 4.0 and greater, the GAC is located in
+  C:\Windows\Microsoft.NET\assembly\GAC_MSIL.
+
+* Before deploying an assembly to the GAC, it must be assigned a strong name,
+  which is used to uniquely identify the publisher of a .NET binary.
+
+* To automatically increment the build and revision numbers
+  on each compilation, write the following in the AssemblyInfo.cs file::
+
+      [assembly: AssemblyVersion("1.0.*")]
+
+* To create a strong name, which will be assigned to the assembly
+  at ever compilation:
+
+  #. Double-click the Properties icon of the Solution Explorer.
+  #. Select the Signing tab.
+  #. Select the "Sign the assembly" check box.
+  #. Choose the <New..> option from the drop-down list.
+  #. Provide a name for the .snk file (password-protection is optional).
+
+* To install a strongly named assembly into the GAC::
+
+      cd <path of assembly>
+      gacutil -i <name of assembly>.dll
+
+  Check it is installed::
+
+      gatutil -l <name of assembly>
+
+* Can have multiple versions of the same shared assembly.
+  Reference to the correct one for a specific client application.
+
+* Can dynamically redirect to a specific version of a shared library
+  (see p. 547); can also be done machine-wide (and provide exceptions).
+
+* Assemblies may be loaded from other locations, such as remote locations,
+  using the <codeBase> element, but these assemblies must be strongly named.
+
+* Can story application-specific configuration settings in App.config
+  and use classes in System.Configuration to read them.
