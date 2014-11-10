@@ -586,7 +586,84 @@ Object lifetime
   need to be removed; result is that newer objects (like local variables)
   are removed more quickly than older objects.
 
-(Skipping the rest of the chapter, for now. p. 482.)
+* Two main reasons to manually do garbage collection:
+
+  #. About to enter into code you don't want interrupted by garbage collection
+  #. Just finished allocating a large number of objects,
+     and want them removed as soon as possible
+
+  To force manual garbage collection::
+
+      GC.Collect();
+      GC.WaitForPendingFinalizers();
+
+* System.Object has a virtual method called ``Finalize()`` that is called
+  by the garbage collection before removing the object from memory
+  (but cannot override this method on structure types).
+
+* The only reason to override ``Finalize()`` is when dealing
+  with unmanaged resources.
+
+* When unmanaged resources should be immediately released,
+  one can implement the ``IDisposable`` interface,
+  and the client should call ``Dispose()`` on that object.
+  Therefore, if a class extends ``IDisposable``, call its ``Dispose()`` method
+  (though some classes may have a ``Close()`` method).
+
+* To ensure that ``Dispose()`` is called on an object (even in the face
+  of an exception), use the ``using`` keyword::
+
+      using (MyResourceWrapper rw = new MyResourceWrapper())
+      {
+          // Use rw
+      }
+
+* Use the disposal pattern to permit desposing of managed and unmanaged
+  resources in ``Dispose()`` but only unmanaged resources in ``Finalize()``::
+
+      class MyResourceWrapper : IDisposable
+      {
+          private bool disposed = false;
+
+          public void Dispose()
+          {
+              CleanUp(true);
+              GC.SuppressFinalize(this);
+          }
+
+          private void CleanUp(bool disposing)
+          {
+              if (!disposed)
+              {
+                  if (disposing)
+                  {
+                      // Dispose of managed resources
+                  }
+
+                  // Clean up unmanaged resources
+              }
+
+              disposed = true;
+          }
+
+          ~MyResourcesWrapper()    // Way to implement Finalize()
+          {
+              CleanUp(true);
+          }
+      }
+
+* Can use "lazy initialization" of an object, so instead of::
+
+      AllTracks allSongs = new AllTracks()
+
+  one can say::
+
+      Lazy<AllTracks> allSongs = new Lazy<AllTracks>();
+      allSongs.Value;    // Causes the actual instantiation
+
+* Can use a lambda expression to send parameters to the constructor
+  of ``AllTracks`` above (see p. 499).
+
 
 Class libraries
 ---------------
