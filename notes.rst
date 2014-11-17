@@ -742,3 +742,47 @@ Class libraries
 
 * Can story application-specific configuration settings in App.config
   and use classes in System.Configuration to read them.
+
+Type reflection, late binding, and attributes
+---------------------------------------------
+
+* An assembly's metadata describes both the set of internal types
+  and any external types that the internal types reference.
+
+* ``System.Type`` contains many properties and methods that allow one
+  to obtain information about a type (e.g., is it abstract).
+
+* Can obtain a ``Type`` object in several ways::
+
+      // SportsCar is known at compile-time and sc is an existing object
+      SportsCar sc = new SportsCar();
+      Type t1 = sc.GetType();
+
+      // SportsCar is known at compile-time, but no object needed
+      Type t2 = typeof(SportsCar);
+
+      // SportsCar is not known at compile-time, is in internal assembly
+      Type t3 = Type.GetType("CarLibrary.SportsCar");
+
+      // SportsCar is not known at compile-time, is in external assembly
+      Type t4 = Type.GetType("CarLibrary.SportsCar, CarLibrary");
+
+      // SpyOptions is a nested type (e.g., an enumeration)
+      Type t5 = Type.GetType("CarLibrary.JamesBondCar+SpyOptions");
+
+* Generic type names are specified by the name of the type,
+  followed by a back tick character, then followed by the number
+  of type parameters::
+
+      System.Collections.Generic.List`1
+      System.Collections.Generic.Dictionary`2
+
+* Can load an assembly with ``Assembly.Load()`` or ``Assembly.LoadFrom()``.
+  The first expects the friendly name (i.e., without ``.dll``)
+  and the second expects a full path of the assembly (with ``.dll``).
+
+* Get all types from an assembly with the ``GetTypes()`` method
+  of an ``Assembly`` object.
+
+* To load a shared assembly (i.e., one in the GAC), one must provide
+  a public key token when loading the assembly.
