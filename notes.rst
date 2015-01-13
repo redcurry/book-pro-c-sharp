@@ -786,3 +786,50 @@ Type reflection, late binding, and attributes
 
 * To load a shared assembly (i.e., one in the GAC), one must provide
   a public key token when loading the assembly.
+
+* After loading an assembly, can create an object in that assembly
+  using the ``Activator`` class::
+
+      // asm is of type Assembly
+      Type miniVan = asm.GetType("CarLibrary.MiniVan");
+      object obj = Activator.CreateInstance(miniVan);
+
+* Call a method with no parameters of a late-bound object
+  using ``Invoke`` from ``MethodInfo``::
+
+      MethodInfo mi = miniVan.GetMethod("TurboBoost");
+      mi.Invoke(obj, null);    // obj from above
+
+* Call a method with parameters by specifying an array of ``objects``::
+
+      MethodInfo mi = miniVan.GetMethod("TurnOnRadio");
+      mi.Invoke(obj, new object[] { true, 2 });
+
+* Create a custom attribute by deriving from ``System.Attribute``
+  (mark the new class as ``sealed``).
+
+* To restrict use of a custom attribute to a class or structure::
+
+      [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+      public sealed class VehicleDescriptionAttribute : System.Attribute
+      {
+          ...
+      }
+
+* Get the attributes of a type (the boolean controls whether to search
+  up the inheritance chain)::
+
+      Type t = typeof(Winnebago);
+      object[] customAtts = t.GetCustomAttributes(false);
+
+* To get attributes of a specific type::
+
+      // Here attributeString is the full name of the attribute type
+      Type attr = asm.GetType(attributeString);
+      object[] atts = t.GetCustomAttributes(attr, false);
+
+* To get the property of an attribute::
+
+      // Here "Description" is the name of a property
+      PropertyInfo propDesc = attr.GetProperty("Description");
+      propDesc.GetValue(attrib, null);  // atttrib is a specific attribute obj
