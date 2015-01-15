@@ -833,3 +833,34 @@ Type reflection, late binding, and attributes
       // Here "Description" is the name of a property
       PropertyInfo propDesc = attr.GetProperty("Description");
       propDesc.GetValue(attrib, null);  // atttrib is a specific attribute obj
+
+Dynamic types
+-------------
+
+* Declare and define a dynamic type
+  (the same variable can be assigned to a different type)::
+
+      dynamic t = "Hello!";
+      t = false;
+      t = new List<int>();
+
+* There is no type-checking by the compiler with dynamic types.
+
+* The ``dynamic`` keyword may be used on fields, properties,
+  method return types, and parameter types.
+
+* Methods on dynamic data cannot use lambdas::
+
+      dynamic a = GetDynamicObject();
+      a.Method(arg => Console.WriteLine(arg)); // Error
+
+* Dynamic types cannot understand any extension methods (including LINQ)::
+
+      dynamic a = GetDynamicObject();
+      var data = from d in a select d; // Error
+
+* Simplifies late-binding::
+
+      Type miniVan = asm.GetType("CarLibrary.MiniVan");
+      dynamic obj = Activator.CreateInstance(miniVan);
+      obj.TurboBoost(10); // Parameters can be sent to method directly
