@@ -28,19 +28,22 @@ There can only be one and cannot take any parameters.
 Called before any object of that class is instantiated
 or before any static member is called.
 
-### Static class
+Static class
+............
 
 Can only contain static members.
 Cannot be instantiated.
 Used for utility classes.
 
-### Access modifiers
+Access modifiers
+................
 
 public types (e.g., classes) can be accessed from external assemblies.
 internal types cannot be accessed from external assemblies
   (only nested types can be private).
 
-### Automatic properties
+Automatic properties
+....................
 
     class Car
     {
@@ -49,7 +52,8 @@ internal types cannot be accessed from external assemblies
         public int Speed { get; set; }
     }
 
-### Initialization syntax
+Initialization syntax
+.....................
 
 Initialize an object using its properties:
 
@@ -69,32 +73,38 @@ A more complex example:
         BottomRight = new Point { X = 200, Y = 200 }
     };
 
-### Const and read-only fields
+Const and read-only fields
+..........................
 
 `const` members are implicitly `static` and must be defined at compile-time.
 `readonly` fields are like `const`, but may be defined at runtime
   in the constructor only; also, they are not implicitly `static`.
 A `readonly` field can be `static` and initialized in a static constructor.
 
-## Inheritance
+Inheritance
+-----------
 
 Structures cannot be derived; they are sealed.
 
-### Multiple inheritance
+Multiple inheritance
+....................
 
 Not allowed, except interfaces.
 
-### Keyword base
+Keyword base
+............
 
 Use for calling base constructor:
 
     public Manager(...) : base (...) { ... }
 
-### Nested (or inner) types
+Nested (or inner) types
+.......................
 
 Can access private members of the outer class.
 
-## Polymorphism
+Polymorphism
+............
 
 `virtual`: method is allowed to be overridden (but does not have to be).
 `override`: method overrides a virtual method.
@@ -110,7 +120,8 @@ Can call base's method, like `base.method()`.
 `as` keyword: Cast to specified type, if it can't, set it to `null`
 `is` keyword: Test whether an object is of the specified type
 
-## System.Object
+System.Object
+.............
 
 `Equals()` compares object references by default.
 If overriding `Equals()`, should also override `GetHashCode()`.
@@ -120,7 +131,66 @@ For the hash code, could use `GetHashCode()` on an important field
     and `static ReferenceEquals()` in object
     take two objects and compares what they're pointing to
 
-(Skipped Chapter 7. Exceptions)
+Exceptions
+----------
+
+* The ``TargetSite`` property of an ``Exception`` returns a ``MethodBase``
+  object, representing the method or property that threw the exception.
+
+* The ``Data`` property of an exception, returns an object that
+  inherits ``IDictionary``, so one can store additional data there.
+
+* When creating custom exceptions, derive from ``System.ApplicationException``
+  so that you know the exception came from the application and not from
+  .NET (which inherit ``System.SystemException``).
+
+* Use the ``exception`` snippet in Visual Studio to create
+  a .NET best practices exception.
+
+* ``catch (SpecificException e)`` will catch only exceptions deriving
+  from ``SpecificException``, ``catch (Exception e)`` will catch any exception,
+  and ``catch`` by itself will catch any exception, but not give you the
+  exception object.
+  
+* Rethrow an exception by simply saying ``throw``
+  (no need to specify the object).
+
+* An exception may be thrown by code within a ``catch`` block;
+  throw a new exception by specifying an inner exception::
+
+      catch (CarIsDeadException e)
+      {
+          try
+          {
+              FileStream fs = File.Open(@"C:\errors.txt", FileMode.Open);
+              ...
+          }
+          catch (Exception e2)
+          {
+              // Throw an exception that records th new exception,
+              // as well as the message of the first exception
+              throw new CarIsDeadException(e.Message, e2);
+          }
+      }
+
+* A ``finally`` block will always run, whether an exception occurred or not::
+
+    try
+    {
+        ...
+    }
+    catch(Exception e)
+    {
+        ..
+    }
+    finally
+    {
+        // This will always run, exception or not
+        ...
+    }
+
+  Put logic in a ``finally`` block to do clean up (e.g., dispose of objects,
+  close a file, detach from a database).
 
 Interfaces
 ----------
