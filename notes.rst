@@ -934,3 +934,93 @@ Dynamic types
       Type miniVan = asm.GetType("CarLibrary.MiniVan");
       dynamic obj = Activator.CreateInstance(miniVan);
       obj.TurboBoost(10); // Parameters can be sent to method directly
+
+Processes
+---------
+
+- A process is an operating system-level concept that describes
+  a set of resources (e.g., code libraries and primary thread)
+  and the necessary memory allocations used by a running application
+  (for each \*.exe loaded into memory, the OS creates a separate process).
+
+- A thread is a path of execution within a process and has concurrent
+  access to all shared points of data within the process.
+
+- ``Process.GetProcesses(".")`` returns an array of ``Process`` objects
+  that represent the running processes on the local computer.
+  Can get a lot of info for a specific process (e.g., PID, name, threads).
+
+- Get a specific process by ID with ``Process.GetProcessById()``.
+
+- Get a process's threads with ``Threads`` in a process object,
+  and get info for a ``ProcessThread`` (e.g., id, start time, priority).
+  ``ProcessThread`` is not used to create, suspend, or kill threads.
+
+- A process module describes a \*.dll (or the \*.exe itself)
+  hosted by a process. Get a list of modules with ``Modules``
+  in a process object.
+
+- To start a new process, call ``Process.Start``::
+
+      Process ie = Process.Start("IExplore.exe", "www.facebook.com");
+
+- To kill a process::
+
+      ie.Kill();
+
+- Can also send a ``ProcessStartInfo`` object to the ``Start()`` method,
+  which allows you to specify more options to start the process.
+
+AppDomains
+----------
+
+- An executables is not hosted directly within a Windows process;
+  it is hosted by a logical partition within a process called
+  an application domain (AppDomain).
+
+- A single process may have multiple AppDomains, each of which
+  is hosting a .NET executable.
+
+- Using the ``AppDomain`` class, one can load an assembly into
+  the current AppDomain or unload an AppDomain within a process.
+  One cannot unload an assembly from memory; one must tear down
+  the hosting AppDomain using the ``Unload()`` method.
+
+- Get the default AppDomain with the ``AppDomain.CurrentDomain`` property.
+
+- Get the assemblies loaded in the current AppDomain::
+
+      AppDomain.CurrentDomain.GetAssemblies();
+
+- Listen to when an assembly has been loaded to an AppDomain::
+
+      AppDomain.CurrentDomain.AssemblyLoad += (o, s) =>
+      {
+          Console.WriteLine("{0} loaded.", s.LoadedAssembly.GetName().Name);
+      };
+
+- To create a new AppDomain::
+
+      AppDomain newAD = AppDomain.CreateDomain("AnyDomainName");
+
+- To load an \*.exe assembly and execute its ``Main()`` method,
+  use the ``AppDomain.ExecuteAssembly()`` method.
+
+- The event ``DomainUnload`` is fired when a custom AppDomain
+  is unloaded from the containing process. The event ``ProcessExit``
+  is fired when the default AppDomain is unloaded
+  (which means that the process is terminating).
+
+Object contexts
+---------------
+
+- AppDomains may be logically partitioned into object contexts.
+
+- Using object contexts, the CLR is able to ensure that objects with special
+  runtime requirements (e.g., have the ``[Synchonization]`` attribute) are
+  handled appropriately by intercepting method calls into and out of a context.
+
+- Every AppDomain contains a default context (*context 0*),
+  which is the first context created within an AppDomain.
+  Most .NET objects are loaded into context 0, but if a new object
+  has special needs, a new context boundary is created with the AppDomain.
