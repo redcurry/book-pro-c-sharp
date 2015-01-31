@@ -934,3 +934,365 @@ Dynamic types
       Type miniVan = asm.GetType("CarLibrary.MiniVan");
       dynamic obj = Activator.CreateInstance(miniVan);
       obj.TurboBoost(10); // Parameters can be sent to method directly
+
+Multithreaded, parallel, and async programming
+----------------------------------------------
+
+Multithreading
+..............
+
+* Get the current thread (using ``System.Threading`` namespace)::
+
+      Thread currThread = Thread.CurrentThread;
+
+* Get the AppDomain of the current thread::
+
+      AppDomain ad = Thread.GetDomain();
+
+* Invoking a delegate, calls its registered methods synchronously.
+
+* Delegates are processed by the compiler, which generates
+  a new class definition, which includes the ``Invoke`` method
+  (synchronous) as well as ``BeginInvoke`` and ``EndInvoke``
+  (used to call the delegate methods asynchronously).
+
+* For example, given a method ``int Add(int x, int y)``
+  and a delegate ``delegate int BinaryOp(int x, int y)``,
+  call the ``Add`` method asynchronously as follows::
+
+      BinaryOp b = new BinaryOp(Add);
+      IAsyncResult iftAR = b.BeginInvoke(10, 10, null, null)
+      ...
+      int answer = b.EndInvoke(iftAR);    // fetch return value
+
+* But, in the above, if what's in ``...`` doesn't take too long,
+  then calling ``EndInvoke`` effectively blocks the main thread.
+  One can tell whether an asynchronously called method has finished
+  by using the ``IsCompleted`` property on an ``IAsyncResult``.
+
+* Can have a method to be called when the async task is completed.
+  Specify this method in ``BeginInvoke`` (set to ``null`` above)::
+
+      BinaryOp b = new BinaryOp(Add);
+      IAsyncResult iftAR = b.BeginInvoke(10, 10,
+          new AsyncCallback(AddComplete), null);
+      ...
+      static void AddComplete(IAsyncResult iftAR)
+      {
+          // Code runs in secondary thread (not in primary thread)
+      }
+
+* To get the result of the asynchronous method within the callback::
+
+      // import System.Runtime.Remoting.Messaging
+      static void AddComplete(IAsyncResult iftAR)
+      {
+          AsyncResult ar = (AsyncResult)iftAR;
+          BinaryOp b = (BinaryOp)ar.AsyncDelegate;
+          int result = b.EndInvoke(iftAR);
+      }
+
+* Can pass arbitrary data to the callback method through ``BeginInvoke``::
+
+      IAsyncResult iftAR = b.BeginInvoke(10, 10,
+          new AsyncCallback(AddComplete), "Blah");
+      ...
+      static void AddComplete(IAsyncResult iftAR)
+      {
+          string msg = (string)iftAR.AsyncState;
+      }
+
+* Create and start a new thread manually::
+
+      // Create the method that will be run in a thread;
+      public class Printer
+      {
+          // For now, method takes no parameters and returns void
+          public void PrintNumbers()
+          {
+              ...
+          }
+      }
+
+      static void Main()
+      {
+          Printer p = new Printer();
+
+          // Create the thread and start it
+          Thread thread = new Thread(new ThreadState(p.PrintNumbers));
+          thread.Name = "Secondary";
+          thread.Start();
+      }
+
+* Instead of ``ThreadStart``, use ``ParameterizedThreadStart``
+  if you want to pass in an ``object`` parameter to the method.
+
+* One thread-safe way to force a thread to wait until another is done,
+  is to use the ``AutoResetEvent`` class::
+
+      // Send false to signify you have not yet been notified that is not done
+      private static AutoResetEvent waitHandle = new AutoResetEvent(false);
+
+      static void Main(string[] args)
+      {
+          AddParams ap = new AddParams(10, 10);
+          Thread t = new Thread(new ParameterizedThreadStart(Add));
+          t.Start(ap);
+
+          // Wait until notified
+          waitHandle.WaitOne();
+      }
+
+      static void Add(object data)
+      {
+          ...
+
+          // Tell other thread we are done
+          waitHandle.Set();
+      }
+
+* Foreground threads can prevent the current application from terminaning.
+  The CLR will not shut down an application until all foreground threads
+  have ended. In contrast, background threads can be terminated by the CLR
+  if all foreground threads have terminated.
+
+* By default, threads created by ``Thread.Start()`` are foreground threads
+  (i.e., the AppDomain will not unload until it has completed its work).
+
+* To set a thread as a background thread::
+
+      thread.IsBackground = true;
+      thread.Start();
+
+* To prevent other threads from accessing the same scope of a method,
+  use a lock scope (``this`` for private methods, an object for public)::
+
+      private void SomePrivateMethod()
+      {
+          lock (this)
+          {
+              // Thread safe
+          }
+      }
+
+      public class Printer
+      {
+          private object threadLock = new object();
+
+          public void PrintNumbers()
+          {
+              lock (threadLock)
+              {
+                  ...
+              }
+          }
+      }
+
+* You have more control over synchronization with the ``Monitor`` class.
+
+* The ``System.Threading.Interlocked`` type provides a set of static
+  methods to perform some atomic operations
+  (e.g., ``Increment()``, ``Decrement()``, ``Exchange()``).
+
+* To make all methods of a class thread-safe, use the
+  ``[Synchronization]`` attribute on the class and have it derive
+  from ``ContextBoundObject``.
+
+* Run a method using a timer::
+
+      class Program
+      {
+          // Method to run with a timer (one parameter)
+          static void PrintTime(object state)
+          {
+              ...
+          }
+
+          static void Main(string[] args)
+          {
+              // Create the delegate for the Timer
+              TimerCallback timeCB = new TimerCallback(PrintTime);
+
+              Timer t = new Timer(
+                  timeCB,    // the delegate created above
+                  null,      // parameter passed as "state" above
+                  0,         // time to wait before starting (in ms)
+                  1000);     // time between calls (in ms)
+          }
+      }
+
+* Instead of creating a new thread manually, you can use the ``ThreadPool``.
+  This is a pool of worker threads (run in the background) maintained
+  by the runtime. It's more efficient than creating threads::
+
+      Printer p = new Printer();    // Contains method to run in the background
+
+      // Create delegate object
+      WaitCallback workItem = new WaitCallback(PrintTheNumbers);
+
+      // Queue the method ten times
+      for (int i = 0; i < 10; i++)
+      {
+          // Queue workItem and sent parameter p
+          ThreadPool.QueueUserWorkItem(workItem, p);
+      }
+      ...
+      static void PrintTheNumbers(object state)
+      {
+          // state is the p variable sent above
+          Printer task = (Printer)state;
+          task.PrintNumbers();
+      }
+
+Task Parallel Library (TPL)
+...........................
+
+* Process a loop in as many CPUs as possible (will block current thread
+  until the loop is done)::
+
+      Parallel.ForEach(list, item =>
+      {
+          // Perform task here
+      });
+
+* Secondary threads should not "touch" GUI controls that it did not create,
+  but can do so by calling::
+
+      // Windows Forms API; use this.Dispatcher.Invoke for WPF
+      this.Invoke((Action)delegate
+      {
+          // Access GUI controls
+      });
+
+* Use the ``Task`` class to invoke a method on a secondary thread::
+
+      Task.Factory.StartNew(() =>
+      {
+          // Do task here
+      });
+
+* A cancellation request can be provided when using methods on ``Parallel``.
+  ``Parallel.For`` and ``Parallel.ForEach`` can be passed in a
+  ``ParallelOptions`` object, which contains a ``CancellationTokenSource``
+  object::
+
+      // Class-level variable
+      private CancellationTokenSource cancelToken =
+          new CancellationTokenSource();
+
+      // Cancel button handler
+      private void btnCancel_Click(object sender, EventArgs e)
+      {
+          cancelToken.Cancel();
+      }
+
+      // Method to use Parallel.ForEach()
+      private void ProcessFiles()
+      {
+          // Create a ParallelOptions object
+          ParallelOptions parOpts = new ParallelOptions();
+          parOpts.CancellationToken = cancelToken.Token;
+          parOpts.MaxDegreeOfParallelism = System.Environment.ProcessorCount;
+
+          try
+          {
+              Parallel.ForEach(files, parOpts, currentFile =>
+              {
+                  parOpts.CancellationToken.ThrowIfCancellationRequestion();
+
+                  // Do work here
+              });
+          }
+          catch (OperationCanceledException ex)
+          {
+              // Handle cancellation
+          }
+      }
+
+* Can perform separate tasks in parallel using ``Parallel.Invoke``::
+
+      Parallel.Invoke(
+          () =>
+          {
+              // Task 1
+          },
+          () =>
+          {
+              // Task 2
+          },
+          () =>
+          {
+              // Task 3, and so on...
+          });
+
+* Use ``AsParallel`` (PLINQ query) to execute a LINQ query in parallel::
+
+      from num in source.AsParallel() where num % 3 == 0;
+
+* Can use cancellation requests::
+
+      // Class-level object
+      private CancellationTokenSource cancelToken =
+          new CancellationTokenSource();
+
+      // Cancel button handler
+      private void btnCancel_Click(...)
+      {
+          cancelToken.Cancel();
+      }
+
+      // PLINQ query with cancellation
+      try
+      {
+          modThreeIsZero = (from num in
+              source.AsParallel().WithCancellation(cancelToken.Token)
+              where num % 3 == 0 orderby num descending select num).ToArray();
+      }
+      catch (OperationCanceledException ex)
+      {
+          // Handle cancellation
+      }
+
+Asynchronous calls
+..................
+
+* Use ``async`` and ``await`` together::
+
+      // Button handler, called asynchronously
+      private async void btnCallMethod_Click(...)
+      {
+          // Call DoWork and wait until done
+          this.Text = await DoWorkAsync();
+      }
+
+      private Task<string> DoWorkAsync()
+      {
+          return Task.Run(() =>
+          {
+             // Do work
+             return "Return value";
+          });
+      }
+
+* Use nongeneric ``Task`` to omit a return value::
+
+      private Task DoWorkAsync()
+      {
+          Task.Run(() => { // Do work });
+      }
+
+      // Caller
+      private async void handler(...)
+      {
+          await DoWorkAsync();
+      }
+
+* An async method can contain multiple await methods,
+  and the tasks can be inlined without having to create external methods::
+
+      private async void handler(...)
+      {
+          await Task.Run(() => { // Do something });
+          await Task.Run(() => { // Do something else });
+          ...
+      }
