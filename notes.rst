@@ -1453,3 +1453,79 @@ ADO.NET: Connected layer
 
   The connection builder can take a whole connection string as its constructor
   and it will fill its properties accordingly.
+
+* To insert a row into a table::
+
+    Car car = CreateCar(); // somehow get a Car object
+    string sql = string.Format("Insert Into Invertory" +  // Inventory is table
+        "(CarID, Make, Color, PetName) Values" +
+        "('{0}', '{1}', '{2}', '{3}')",
+        car.CarID, car.Make, car.Color, car.PetName);
+
+    using (SqlCommand cmd = new SqlCommand(sql, cn))  // cn is the connection
+    {
+        cmd.ExecuteNonQuery();  // performs the insertion call
+    }
+
+  Deleteing and updating a row follow a very similar pattern (see p. 841).
+
+* Parameterized commands let you specify the values to add to a database
+  with parameters to the command object rather than directly as strings.
+  They may also be used for the other types of commands (see p. 844).
+
+* Execute a stored procedure as follows::
+
+    // GetPetName is a stored procedure; cn is the connection object
+    using (SqlCommand cmd = new SqlCommand("GetPetName", cn)
+    {
+        // Must specify the type, or it will think it's a SQL statement
+        cmd.CommandType = CommandType.StoredProcedure;
+
+        // Create and set up input parameter
+        SqlParameter param = new new SqlParameter();
+        param.ParameterName = "@carID";
+        param.SqlDbType = SqlDbType.Int;
+        param.Value = carID;
+        param.Direction = ParamaterDirection.Input;
+        cmd.Parameters.Add(param);  // Add parameter to command
+
+        // Create and set up output parameter
+        param = new SqlParameter();
+        param.ParameterName = "@petName";
+        param.SqlDbType = SqlDbType.Char;
+        param.Size = 10;
+        param.Direction = ParameterDirection.Output;
+        cmd.Parameters.Add(param);  // Add parameter to command
+
+        cmd.ExecuteNonQuery();
+
+        // Get the result
+        carPetName = (string)cmd.Parameters"@petName].Value;
+    }
+
+* To perform a transaction::
+
+    // Create the two commands to execute as a transaction (i.e., atomicly)
+    SqlCommand cmdRemove = CreateRemoveCmd();
+    SqlCommand cmdInsert = CreateInsertCmd();
+
+    SqlTransaction tx = null;
+
+    try
+    {
+        tx = cn.BeginTransaction();   // cn is the connection object
+
+        // Must enlist each command object as a transaction
+        cmdInsert.Transaction = tx;
+        cmdRemove.Transaction = tx;
+
+        // Execute the commands
+        cmdInsert.ExecuteNonQuery();
+        cmdRemove.ExecuteNonQuery();
+
+        tx.Commit();
+    }
+    catch (Exception ex)
+    {
+        tx.Rollback();
+    }
