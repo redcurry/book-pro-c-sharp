@@ -1386,3 +1386,70 @@ Asynchronous calls
           await Task.Run(() => { // Do something else });
           ...
       }
+
+ADO.NET: Connected layer
+------------------------
+
+* A data provider is a set of types (in a specific namespace)
+  that can communicate with a specific database management system (DBMS).
+  They share a core set of types (classes and interfaces).
+
+* .NET ships with a few data providers, so for non-Microsoft DBMSs,
+  one should download the ADO.NET data providers from the vendor's website
+  (or they may have a nuget package).
+
+* It is recommended to use a config file to specify the specific data provider
+  (see p. 814). One can also specify the connection string(s)
+  in the <connectionStrings> element of the config file (see p. 829).
+
+* The `DbProviderFactories.GetFactory()` method allows one to obtain
+  a factory for a specific data provider::
+
+    DbProviderFactory df = DbProviderFactories.GetFactory
+        ("System.Data.SqlClient");
+
+* Using the factory, obtain a specific connection object, open it,
+  and print out some data from the database::
+
+    using (DbConnection cn = df.CreateConnection())
+    {
+        cn.ConnectionString = "Data Source=(local)\SQLEXPRESS"; // incomplete
+        cn.Open();
+
+        DbCommand cmd = df.CreateCommand();
+        cmd.Connection = cn;
+        cmd.CommandText = "Select * From Inventory";
+
+        using (DbDataReader dr = cmd.ExecuteReader())
+        {
+            while (dr.Read())
+            {
+                // Do something with dr["CarID"], dr["Make"], etc.
+            }
+        }
+    }
+
+* Instead of accessing each column by name, one can use indeces::
+
+    for (int i = 0; i < dr.Fieldcount; i++)
+    {
+        // Do something with dr.GetName(i) [the column] or dr.GetValue(i)
+    }
+
+* Can have multiple queries in a single command string,
+  which can be read using a DataReader's `NextResult()` method.
+
+* The connection string may be built using a SqlConnectionStringBuilder::
+
+    SqlConnectionStringBuilder cnBuilder = new SqlConnectionStringBuilder();
+    cnBuilder.DataSource = "ServerName";
+    cnBuilder.InitialCatalog = "DatabaseName";
+    cnBuilder.ConnectTimeout = 30;
+    cnBuilder.UserId = "user";
+    cnBuilder.Password = "password";
+    ...
+    // cn is the connection string object
+    cn.ConnectionString = cnBuilder.ConnectionString;
+
+  The connection builder can take a whole connection string as its constructor
+  and it will fill its properties accordingly.
