@@ -151,7 +151,7 @@ Exceptions
   from ``SpecificException``, ``catch (Exception e)`` will catch any exception,
   and ``catch`` by itself will catch any exception, but not give you the
   exception object.
-  
+
 * Rethrow an exception by simply saying ``throw``
   (no need to specify the object).
 
@@ -1529,3 +1529,173 @@ ADO.NET: Connected layer
     {
         tx.Rollback();
     }
+
+ADO.NET: Disconnected layer
+---------------------------
+
+* A ``DataSet`` is an in-memory representation of relational data.
+  It contains three collections, representing the data tables,
+  data relations, and name/value pairs (can be anything).
+
+* Create a ``DataSet`` and set some properties::
+
+    DataSet cars = new DataSet("Car Inventory");
+    cars.ExtendedProperties["TimeStamp"] = DataTime.Now;
+    cars.ExtendedProperties["DataSetID"] = Guid.NewGuid();
+    cars.ExtendedProperties["Company"] = "Anything";
+
+* Fill a ``DataSet`` with data::
+
+    // Create some columns
+    DataColumn carIdCol = new DataColumn("CarID", typeof(int))
+    {
+        Caption = "Car ID",      // string for display purposes
+        ReadOnly = true,
+        AllowDBNull = false,
+        Unique = true,
+        AutoIncrement = true,    // helpful with primary keys
+        AutoIncrementSeed = 0,   // start ID at 0
+        AutoIncrementStep = 1
+    };
+    DataColumn carMakeCol = new DataColumn("Make", typeof(string));
+    DataColumn carColorCol = new DataColumn("Color", typeof(string));
+
+    // Create a table and add columns
+    DataTable inventory = new DataTable("Inventory");
+    inventory.Columns.AddRange(
+        new DataColumn[] { carIdCol, carMakeCol, carColorCol });
+
+    // Add rows to the table
+    DataRow row = inventory.NewRow();    // DataRow has no public constructor
+    row["Make"] = "BMW";
+    row["Color"] = "Black";
+    inventory.Rows.Add(row);
+
+    // Add another row (using indeces instead; index 0 is the car ID)
+    row = inventory.NewRow();
+    row[1] = "Saab";
+    row[2] = "Red";
+    inventory.Rows.Add(row);
+
+    // Specify the primary key for the table (it's actually a collection)
+    inventory.PrimaryKey = new DataColumn[] { inventory.Columns[0]; }
+
+    // Add the table to the data set
+    cars.Tables.Add(inventory);
+
+* ``DataRows`` have the methods
+  ``AcceptChanges()``, ``RejectChanges()``, and ``Delete()``,
+  which change the ``RowState`` property of the ``DataRow``.
+  ``RowState`` values may be ``Added``, ``Deleted``, ``Detached``
+  (row is not part of a collection), ``Modified``, or ``Unchanged``.
+
+* ``DataRows`` have the property ``DataRowVersion``, containing
+  multiple versions of the data, depending on the state of the row
+  (see Table 22-6).
+
+* Access an individual cell value in a table::
+
+    dataTable.Rows[rowIndex][colIndex]
+
+* Elements of a data table may be processed by using a ``DataTableReader``,
+  which behaves similarly to a data reader object in the connected layer::
+
+    DataTableReader dtReader = dataTable.CreateDataReader();
+    while (dtReader.Read())
+    {
+        for (int i = 0; i < dtReader.FieldCount; i++)
+        {
+            // Do something with dtReader.GetValue(i)
+        }
+    }
+    dtReader.Close();
+
+* ``DataSet`` and ``DataTable`` can be written to and read from a file as XML
+  by using the ``WriteXml()`` and ``ReadXml()`` methods::
+
+    dataSet.WriteXml("data_set.xml");
+    dataSet.WriteXmlSchema("schema.xsd");    // schema
+
+    dataSet.Clear();                         // reset data set before reading
+    dataSet.ReadXml("data_set.xml");
+
+  But LINQ to XML is the preferred way for manipulating XML data.
+
+* ``DataSets`` can be saved and loaded in binary format (see page 876).
+
+* Delete a row from a data table, given the value of a field called "ID"::
+
+    DataRow[] rowToDelete = dataTable.Select("ID=" + idToDelete);
+    rowToDelete[0].Delete();
+    dataTable.AcceptChanges();
+
+* Obtain specific rows that satisfy a condition, possibly sorted::
+
+    // Selects rows whose Make column value is in the variable make
+    string filter = string.Format("Make = '{0}', make);
+    DataRow[] rows = dataTable.Select(filter);
+
+    DataRow[] rows = dataTable.Select(filter, "PetName"); // sorted by PetName
+    DataRow[] rows = dataTable.Select(filter, "PetName DESC"); // reverse order
+
+  The filter string may contain any relational operation, e.g., "ID > 5"
+
+* The ``DataView`` object allows you to represent a data table for viewing,
+  so that filters may be applied without changing the original table.
+
+* To actually load data from a database::
+
+    string cnStr = "Integrated Security = SSPI;Initial Catalog=AutoLot;" +
+        @"Data Source=(local)\SQLEXPRESS";  // sample connection string
+    DataSet ds = new DataSet("AutoLot");    // data set must be created
+    SqlDataAdapter adapter =
+        new SqlDataAdapter("Select * From Inventory", cnStr);
+    adapter.Fill(ds, "Invertory");  // second arg is name of new table
+
+* The ``TableMappings`` property of an adapter may be used
+  to give alternative names to tables and columns (see page 891).
+
+* Create data table relationships::
+
+    DataRelation dr = new DataRelation("CustomerOrder"   // friendly name
+        dataSet.Tables["Customers"].Columns["CustID"],   // parent table
+        dataSet.Tables["Orders"].Columns["CustId"]);     // child table
+    dataSet.Relations.Add(dr);
+
+* Having a ``DataRow``, you can go into its child rows from a table relation::
+
+    DataRow[] childRows =
+        row.GetChildRows(dataSet.Relations["CustomerOrder"]);
+
+  Or to its parent rows::
+
+    DataRow[] parentRows =
+        row.GetParentRows(dataSet.Relations["InventoryOrder"]);
+
+* WPF has database designer tools to help automate
+  some of the data access code, possibly generating strongly-typed classes.
+
+* Iterate a data table using ``foreach``::
+
+    EnumerableRowCollection enumData = dataTable.AsEnumerable();
+    foreach (DataRow r in enumData)
+    {
+        // Do something with r, like getting r["CarID"]
+    }
+
+* LINQ example (uses Field<T> to access fields)::
+
+    var cars = from car in dataTable.AsEnumerable()
+               where car.Field<string>("Color") == "Red"
+               select new
+               {
+                   ID = car.Field<int>("CarID"),
+                   Make = car.Field<string>("Make")
+               };
+    foreach (var item in cars)
+    {
+        // Do something with item.ID or item.Make
+    }
+
+* Use ``CopyToDataTable()`` on an ``IEnumerable<T>`` to create
+  a new ``DataTable`` filled with the enumerable data.
